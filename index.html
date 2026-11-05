@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Master Tool</title>
+<meta name="theme-color" content="#ea580c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--tx:#111827;--mu:#6b7280;--bd:#e5e7eb;--ac:#ea580c;--ac2:#fff;--soft:#f9fafb;--chip:#fff3e8;--chiptx:#c2410c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#181b21;--tx:#f3f4f6;--mu:#9ca3af;--bd:#2a2e37;--ac:#fb7c3c;--ac2:#14161a;--soft:#1e222a;--chip:#2c2019;--chiptx:#fdba74}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--tx:#f3f4f6;--mu:#9ca3af;--bd:#2a2e37;--ac:#fb7c3c;--ac2:#14161a;--soft:#1e222a;--chip:#2c2019;--chiptx:#fdba74}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd)}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--ac);color:var(--ac2);display:grid;place-items:center;font-weight:800;font-size:18px}
+h1{font-size:20px;margin:0;line-height:1.2}
+.sub{color:var(--mu);font-size:13px;margin:0}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-top:16px}
+.panel h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:0 0 12px}
+.head,.row{display:grid;grid-template-columns:26px 1fr 140px;gap:8px;align-items:center}
+.head{font-size:12px;color:var(--mu);font-weight:600;margin-bottom:6px}
+.row{margin-bottom:8px}
+.row b{color:var(--mu);font-size:13px;text-align:center}
+input,select,button,textarea{font:inherit;color:var(--tx);background:var(--soft);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
+button{cursor:pointer;width:auto;font-weight:600}
+.pri{background:var(--ac);color:var(--ac2);border-color:var(--ac);width:100%;padding:13px;font-size:16px;margin-top:8px}
+.sec{background:var(--card)}
+.bar{display:flex;gap:8px;margin-top:8px}
+.bar button{flex:1}
+.res{margin-top:16px}
+.res>h2{font-size:15px;margin:0 0 4px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-top:12px}
+.ct{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.num{width:28px;height:28px;border-radius:8px;background:var(--ac);color:var(--ac2);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.card h3{margin:0;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chip{background:var(--chip);color:var(--chiptx);border-radius:999px;padding:2px 10px;font-size:12px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin:14px 0 6px}
+textarea{font-size:14px;line-height:1.5;resize:vertical}
+.p{min-height:250px}
+.c{min-height:150px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand"><div class="logo">M</div><div><h1>Master Tool</h1><p class="sub">Shredder crush video prompts, hook captions and hashtags</p></div></div></div></header>
+<main class="wrap">
+<section class="panel">
+<h2>Vehicles</h2>
+<div class="head"><span></span><span>Vehicle name</span><span>Color</span></div>
+<div id="rows"></div>
+<button class="pri" id="gen">Generate 6 prompts</button>
+<div class="bar"><button class="sec" id="reroll">Re-roll scenes and captions</button><button class="sec" id="copyall">Copy everything</button></div>
+<div class="bar"><button class="sec" id="reset">Reset</button></div>
+</section>
+<section class="res" id="res" hidden><h2>Results</h2><div id="out"></div></section>
+</main>
+<div id="toast">Copied</div>
+<script>
+const COLORS=["None","Red","Dark red","Blue","Navy blue","Sky blue","Teal","Black","White","Silver","Gray","Charcoal","Yellow","Gold","Orange","Green","Dark green","Lime green","Olive","Brown","Beige","Tan","Purple","Pink","Maroon","Bronze","Copper","Turquoise","Camouflage","Matte black","Rusty old","Faded & weathered"];
+const DEFAULTS=[["Fire truck","Red"],["Old pickup truck","Rusty old"],["School bus","Yellow"],["Muscle car","Black"],["RV motorhome","White"],["Garbage truck","Green"]];
+const BACKGROUNDS=[
+"a huge scrapyard with towering piles of twisted scrap metal on both sides",
+"an open dirt junkyard with a corrugated metal fence and stacked wrecked cars in the distance",
+"an abandoned factory yard with rusty pipes, broken walls and old machinery",
+"a large auto salvage yard with rows of dead cars and a yellow lattice crane nearby",
+"an industrial recycling plant with huge steel scrap mountains and conveyor belts",
+"a harbor-side metal recycling yard with shipping containers and tall cranes behind",
+"an open desert scrap lot with dry dirt and old crushed car stacks on the horizon"];
+const WEATHER=[
+"clear sunny day with a bright blue sky and hard sunlight",
+"heavy dark storm clouds with a moody overcast sky",
+"heavy rain pouring down with wet shiny metal and splashing puddles",
+"light snowfall with snowflakes drifting past and frost on the metal",
+"strong wind blowing dust and loose debris across the yard",
+"thick morning fog with soft diffused light",
+"golden hour sunset with warm orange light and long shadows",
+"night time under bright floodlights with glowing sparks and light haze"];
+const ANGLES=["a wide front-facing shot","a high overhead angle looking straight down into the shredder","a low close-up angle on the spinning shredder teeth","a smooth side tracking shot","a dramatic slow-motion close-up of the body folding"];
+const PATTERNS=[
+[/garbage|trash|waste|refuse/i,"Garbage truck pattern","the rear hopper and compactor body buckle first, the big steel container wall caves in, the lifting arm snaps off, the cab roof peels back and the tall body folds in half as trash and debris burst out"],
+[/fire ?truck|fire engine|ladder/i,"Fire truck pattern","the long ladder snaps and tumbles off, the roof lights and sirens pop, the red cab roof flattens, the tall side compartments burst open and the long rear body folds and tears apart piece by piece"],
+[/bus/i,"Bus pattern","the windshield pops out, the long roof peels up and rips away like a can lid, the windows explode one by one, the seats and frames burst out and the very long body bends and snaps in the middle as the rollers eat it end to end"],
+[/rv|motorhome|camper|caravan|trailer|van\b/i,"RV and van pattern","the thin walls and roof collapse inward, the windows burst, cabinets and furniture spill out, the side panels tear off in big sheets and the whole box body folds flat like cardboard"],
+[/motorcycle|motorbike|bike|scooter|quad/i,"Motorcycle pattern","the handlebars twist, the fuel tank dents, the wheels pop and bend, the thin frame snaps and the whole bike is pulled in and flattened in seconds"],
+[/tractor|excavator|bulldozer|digger|loader|crane|forklift|construction/i,"Heavy machinery pattern","the huge tires burst, heavy steel plates bend with loud groans, the cab frame and glass collapse, the bucket or arm snaps off and thick sparks fly as the rollers struggle then tear it apart"],
+[/pickup|f-?150|f-?250|ram|silverado|truck/i,"Truck pattern","the bed and tailgate fold up first, the cab roof collapses inward, the windshield shatters, the doors burst open, the engine bay is torn open and the long chassis bends and twists through the rollers"],
+[/./,"Car pattern","the hood crumples, the windshield shatters, the roof flattens, the doors burst open, the wheels pop and the engine and chassis are torn apart as the body is pulled between the rollers"]];
+const HOOKS=[
+v=>`Wait for the last 3 seconds… this ${v} didn’t stand a chance 😳`,
+v=>`Nobody was ready for what happened to this ${v} 😱`,
+v=>`This ${v} survived everything… except the shredder 💀`,
+v=>`You’ll replay this ${v} crush at least twice 🔁`,
+v=>`POV: you finally say goodbye to your ${v} 😂`,
+v=>`Stop scrolling. This ${v} is about to vanish 😮`,
+v=>`They said this ${v} would last forever. They were wrong 😳`,
+v=>`The sound of this ${v} getting crushed hits different 🔊`];
+const TEASERS=["Watch till the end, the last second is unreal.","Turn your sound on for the full ASMR effect 🔊","Tell me this isn’t the most satisfying thing you’ve seen today.","The ending will make your day 😌","Don’t blink, you’ll miss the best part."];
+const CTAS=["Which vehicle should I crush next? Comment below 👇","Rate this crush from 1 to 10 👇","Comment “CRUSH” if this satisfied you 😌","Follow for daily satisfying crushes ❤️","Would you crush it or keep it? Tell me 👇","Share this with someone who loves satisfying videos 🔁"];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const rows=document.getElementById("rows");
+function resetAll(){
+  for(let i=0;i<6;i++){
+    document.getElementById("v"+i).value="";
+    document.getElementById("c"+i).value="None";
+  }
+  prompts=[];
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+for(let i=0;i<6;i++){
+  const r=document.createElement("div");r.className="row";
+  r.innerHTML=`<b>${i+1}</b><input id="v${i}" placeholder="Vehicle name" value="${DEFAULTS[i][0]}"><select id="c${i}">${COLORS.map(c=>`<option${c===DEFAULTS[i][1]?" selected":""}>${c}</option>`).join("")}</select>`;
+  rows.appendChild(r);
+}
+let prompts=[];
+function tags(v){
+  const w=v.replace(/[^a-z0-9 ]/gi,"").split(/\s+/).filter(Boolean).slice(-2);
+  const t="#"+w.map(x=>x[0].toUpperCase()+x.slice(1).toLowerCase()).join("");
+  return ["#ASMR","#SatisfyingVideos","#CrushingASMR","#IndustrialShredder",t].join(" ");
+}
+function build(vehicle,color,hook,cta){
+  const bg=pick(BACKGROUNDS),wx=pick(WEATHER);
+  const hasColor=color&&color!=="None";
+  const phrase=hasColor?color.toLowerCase()+" "+vehicle:vehicle;
+  const desc=(/^[aeiou]/i.test(phrase)?"an ":"a ")+phrase;
+  const a=shuffle(ANGLES).slice(0,3);
+  const pt=PATTERNS.find(p=>p[0].test(vehicle));
+  const text=`Ultra realistic vertical 9:16 ASMR video, 10 seconds, cinematic and highly detailed. ${desc.charAt(0).toUpperCase()+desc.slice(1)} hangs from thick steel crane cables, lifted by a yellow crane, above a giant open-top twin-shaft industrial metal shredder with two huge interlocking toothed steel rollers. Setting: ${bg}. Weather: ${wx}.
+
+Action: the crane slowly lowers the ${vehicle} into the shredder. The spinning rollers grab the underside and pull the vehicle forward and down. Crush pattern for this vehicle: ${pt[2]}. Orange sparks fly and dust and metal fragments spray. The vehicle keeps moving along the rollers as it is crushed.
+
+Camera: starts with ${a[0]}, then switches to ${a[1]}, then ${a[2]}, changing angles smoothly while the vehicle is being crushed.
+
+Ending: total destruction. The ${vehicle} is completely and fully destroyed, with the whole body, frame, wheels, glass and interior torn and ground into small shredded scrap pieces that fall through the rollers. No recognizable vehicle shape, wheel or panel remains, only the empty spinning rollers with a few tiny metal bits, while dust slowly settles and the shredder comes to a calm stop. Hold on a clean, satisfying final shot.
+
+Sound: deep metal crunching, grinding rollers, glass cracking, heavy machinery hum, crisp ASMR detail. No people, no text, no logos, no watermark.`;
+  const caption=`${hook(vehicle)}\n${pick(TEASERS)}\n\n${cta}\n\n${tags(vehicle)}`;
+  return {title:hasColor?`${color} ${vehicle}`:vehicle,chips:[pt[1],bg.split(" with")[0].replace(/^(a|an) /,""),wx.split(" with")[0]],text,caption};
+}
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function render(){
+  const out=document.getElementById("out");out.innerHTML="";
+  document.getElementById("res").hidden=!prompts.length;
+  prompts.forEach((p,i)=>{
+    const d=document.createElement("div");d.className="card";
+    d.innerHTML=`<div class="ct"><div class="num">${i+1}</div><h3>${esc(p.title)}</h3></div><div class="chips">${p.chips.map(c=>`<span class="chip">${esc(c)}</span>`).join("")}</div><div class="lbl">Video prompt</div><textarea class="p" readonly></textarea><div class="bar"><button class="sec b1">Copy prompt</button></div><div class="lbl">Caption and hashtags</div><textarea class="c" readonly></textarea><div class="bar"><button class="sec b2">Copy caption</button></div>`;
+    d.querySelector(".p").value=p.text;
+    d.querySelector(".c").value=p.caption;
+    d.querySelector(".b1").onclick=()=>copy(p.text);
+    d.querySelector(".b2").onclick=()=>copy(p.caption);
+    out.appendChild(d);
+  });
+}
+async function copy(t){
+  try{await navigator.clipboard.writeText(t)}catch(e){const x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();document.execCommand("copy");x.remove()}
+  const el=document.getElementById("toast");el.classList.add("on");setTimeout(()=>el.classList.remove("on"),1300);
+}
+function gen(){
+  prompts=[];
+  const hooks=shuffle(HOOKS),ctas=shuffle(CTAS);
+  for(let i=0;i<6;i++){
+    const v=document.getElementById("v"+i).value.trim();
+    if(v)prompts.push(build(v,document.getElementById("c"+i).value,hooks[i%hooks.length],ctas[i%ctas.length]));
+  }
+  render();
+  if(prompts.length)document.getElementById("res").scrollIntoView({behavior:"smooth"});
+}
+document.getElementById("gen").onclick=gen;
+document.getElementById("reset").onclick=resetAll;
+document.getElementById("reroll").onclick=gen;
+document.getElementById("copyall").onclick=()=>{if(prompts.length)copy(prompts.map((p,i)=>`VIDEO ${i+1}: ${p.title}\n\nPROMPT:\n${p.text}\n\nCAPTION:\n${p.caption}`).join("\n\n--------------------\n\n"))};
+</script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+</script>
+</body>
+</html>
